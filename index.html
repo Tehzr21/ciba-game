@@ -491,11 +491,11 @@ function showStoryPage() {
         imgC.style.display = "none";
 
         if (storyPage === 2) {
-	   // if (isMobile) {
-	 //       document.getElementById("storyFrame").style.height = "200px";
-	 //       imgA.style.height = "200px";
- 	//       imgB.style.height = "200px";
-	//    }
+		    if (isMobile) {
+		        document.getElementById("storyFrame").style.height = "200px";
+		        imgA.style.height = "200px";
+	 	       imgB.style.height = "200px";
+		    }
             // Final Reveal: show A and B
             imgA.style.display = "block";
             imgB.style.display = "block";
