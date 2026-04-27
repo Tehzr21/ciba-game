@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ciba-Game</title>
+    <link rel="icon" type="image/webp" href="Asset/Image/icon.webp">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap');
+
+        body {
+            margin: 0;
+            font-family: 'Pixelify Sans', sans-serif;
+            background: #111;
+            color: white;
+            text-align: center;
+            overflow-x: hidden;
+            letter-spacing: 0.5px;
+        }
+
+        #bgVideo {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            z-index: -2;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        .text-frame {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 12px;
+            padding: 12px 20px;
+            display: inline-block;
+            margin: 5px auto;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            width: 80%;
+            max-width: 600px;
+        }
+
+        #startScreen {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: rgba(17, 17, 17, 0.7); 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        #startScreen h1 { font-size: 2.2em; margin: 10px 0; font-weight: 700; } 
+        #startScreen h2 { font-size: 1.3em; margin: 5px 0; font-weight: 400; }
+        
+        #startBtn { 
+            padding: 15px 40px; 
+            font-size: 28px; 
+            border-radius: 8px;
+            margin-top: 25px;
+        }
+
+        #game { display: none; position: relative; z-index: 1; padding-top: 10px; }
+        #puzzle {
+            width: 85vw;
+            height: 85vw;
+            max-width: 400px;
+            max-height: 400px;
+            margin: 15px auto;
+            display: grid;
+            gap: 0px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 5px solid #000;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        #game h3 { font-size: 1.1em; margin: 5px 0; }
+
+        .tile {
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            cursor: grab;
+            user-select: none;
+            -webkit-user-drag: none;
+            touch-action: none;
+        }
+
+        #message {
+            font-size: 20px;
+            color: #5dff5d;
+            display: none;
+            margin-bottom: 5px;
+        }
+
+        #overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            z-index: 999;
+            padding-top: 30px;
+        }
+
+        #rewardTitle {
+            font-size: 18px; 
+            margin-bottom: 15px;
+            width: 85%;
+            padding: 15px 20px;
+        }
+
+        #storyFrame {
+            position: relative;
+            margin-bottom: 15px;
+            height: 300px;
+            width: 100%;
+        }
+
+        #imgC, #imgB, #imgA {
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            border-radius: 4px;
+            height: 300px;
+            width: auto;
+            max-width: 90%;
+        }
+
+        #startBtn, #revealBtn, #nextBtn, #finalBtn {
+            cursor: pointer;
+            background-color: white;
+            color: #d14781;
+            border: none;
+            font-family: 'Pixelify Sans', sans-serif;
+            font-weight: 700;
+            transition: transform 0.1s, background-color 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        #revealBtn, #nextBtn, #finalBtn { 
+            padding: 12px 30px; 
+            font-size: 18px; 
+            border-radius: 8px;
+        }
+
+        #startBtn:active { transform: scale(0.95); }
+
+        #character { width: 75px; transition: transform 0.2s ease; }
+        #characterGlobal {
+            position: fixed;
+            bottom: 10px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        @media (max-width: 600px) {
+            #character { width: 140px; }
+            #startScreen h1 { font-size: 1.8em; }
+            #startScreen h2 { font-size: 1.1em; }
+            
+            #game h3 { font-size: 0.9em; }
+            #game p { font-size: 0.8em; }
+            #message { font-size: 16px; }
+
+            #imgC {
+                width: 50%;
+                height: auto;
+            }
+            #imgA, #imgB {
+                width: 90%;
+                height: auto;
+            }
+        }
+
+        @keyframes constantJump {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-50px); }
+        }
+        @media (max-width: 600px) {
+            @keyframes constantJump {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-120px); }
+            }
+        }
+        .jumping { animation: constantJump 0.4s infinite ease-in-out; }
+
+        #finalMessage {
+            display: none;
+            margin-top: 15px;
+            opacity: 0;
+            transition: opacity 1s ease-in;
+        }
+        .show-final { display: block !important; opacity: 1 !important; }
+    </style>
+</head>
+
+<body>
+
+<video autoplay muted loop playsinline id="bgVideo">
+    <source src="Asset/bg_vid.mp4" type="video/mp4">
+</video>
+
+<div id="startScreen">
+    <div class="text-frame" style="padding: 30px; width: 75%;">
+        <h1>Our Birthday Girl Looks So Sad &#128543;</h1>
+        <h2>Can You Make Her Smile Again?</h2>
+    </div>
+    <button id="startBtn">Start Game</button>
+    <h4 style="margin-top: 20px; opacity: 0.8;">Turn on volume for the full experience</h4>
+</div>
+
+<div id="game">
+    <div class="text-frame">
+        <h3>Despite her disoriented face, you can tell she looks sad...</h3>
+        <p style="margin: 2px 0;">Drag the pieces around and solve the puzzle!</p>
+    </div>
+    
+    <div id="puzzle"></div>
+    
+    <div id="message" class="text-frame">
+        &#127881; Puzzle Completed! &#127881; She starts to smile a little...
+    </div>
+    <br>
+    <button id="revealBtn">Receive Mystery Item</button>
+</div>
+
+<div id="characterGlobal">
+    <img id="character" src="Asset/Image/neutral.webp">
+</div>
+
+<div id="overlay">
+    <div id="rewardTitle" class="text-frame"></div>
+    <div id="storyFrame">
+        <img id="imgC" src=""> 
+        <img id="imgB" src="">
+        <img id="imgA" src="">
+    </div>
+    <button id="nextBtn">Next</button>
+
+    <div id="finalMessage">
+        <div class="text-frame">
+            <h2 id="lastLine" style="margin: 0; font-size: 1.1em;">You made the birthday girl happy again! Look at her jumping with joy!</h2>
+        </div>
+        <br>
+        <button id="finalBtn" onclick="location.reload()">Play Again</button>
+    </div>
+</div>
+
+<script>
+const bgm1 = new Audio("Asset/Audio/wii.ogg");
+const bgm2 = new Audio("Asset/Audio/catwalk.ogg");
+const bgm3 = new Audio("Asset/Audio/finalbgm.ogg");
+bgm1.loop = bgm2.loop = bgm3.loop = true;
+bgm2.volume = 0.8;
+bgm3.volume = 0.5;
+
+function playBGM(lvl){
+    bgm1.pause(); bgm2.pause(); bgm3.pause();
+    if(lvl === 1) { bgm1.currentTime = 0; bgm1.play(); }
+    else if(lvl === 2) { bgm2.currentTime = 0; bgm2.play(); }
+    else if(lvl === 3) { bgm3.currentTime = 0; bgm3.play(); }
+}
+
+const pickupSound = new Audio("Asset/Audio/pickup.ogg");
+const swapSound = new Audio("Asset/Audio/swap.ogg");
+const correctSound = new Audio("Asset/Audio/correct.ogg");
+
+const character = document.getElementById("character");
+let posX = 0; let offsetY = 0; let isReacting = false; let idleTimer;
+
+const isMobile = window.innerWidth < 600;
+
+function startIdle(){
+    function step(){
+        if(isReacting) return;
+        if(Math.random()<0.4){
+            character.style.transform = `translate(${posX}px, ${offsetY}px)`;
+        } else {
+            let dir = Math.random()<0.5?-1:1;
+            let dist = 30; 
+            let height = isMobile ? 80 : 35; 
+            let start=null;
+            function anim(t){
+                if(!start) start=t;
+                let p=(t-start)/500; if(p>1)p=1;
+                let dx = dir*dist*p; let dy = -height*Math.sin(Math.PI*p);
+                character.style.transform = `translate(${posX+dx}px, ${offsetY+dy}px)`;
+                if(p<1) requestAnimationFrame(anim);
+                else{ posX += dir*dist; offsetY=0; }
+            }
+            requestAnimationFrame(anim);
+        }
+        idleTimer=setTimeout(step,500+Math.random()*800);
+    }
+    step();
+}
+
+function happyReaction(){
+    if(isReacting) return;
+    isReacting = true;
+    clearTimeout(idleTimer);
+    character.src = "Asset/Image/happy.webp";
+    const baseX = posX;
+    const jumpHeight = isMobile ? -140 : -70; 
+    setTimeout(()=>{ character.style.transform = `translate(${baseX}px, ${jumpHeight}px)`; },50);
+    setTimeout(()=>{ character.style.transform = `translate(${baseX}px, 0px)`; },200);
+    setTimeout(()=>{
+        character.src="Asset/Image/neutral.webp";
+        isReacting=false;
+        startIdle();
+    },700);
+}
+startIdle();
+
+let level = 1;
+let storyPage = 0;
+const rewardImages = ["Asset/Image/reward1.webp", "Asset/Image/reward2.webp"];
+
+const storyContent = [
+    { text: "You wore the sunglasses and tried to look cool", img: "Asset/Image/sunglass_ciba.webp" },
+    { text: "Wait a minute, this sunglasses can be used for something else...", img: "Asset/Image/bulb.webp" },
+    { text: "With the sunglasses equipped, you look at the over-exposed blank paper. Words start to appear on the paper...", start: "Asset/Image/reward1.webp", end: "Asset/Image/final_reward.webp" }
+];
+
+const levels = [
+    {
+        size:3,
+        a:["Asset/Image/sad_ciba/sad1.webp","Asset/Image/sad_ciba/sad2.webp","Asset/Image/sad_ciba/sad3.webp","Asset/Image/sad_ciba/sad4.webp","Asset/Image/sad_ciba/sad5.webp","Asset/Image/sad_ciba/sad6.webp","Asset/Image/sad_ciba/sad7.webp","Asset/Image/sad_ciba/sad8.webp","Asset/Image/sad_ciba/sad9.webp"],
+        b:["Asset/Image/happy_ciba/happy1.webp","Asset/Image/happy_ciba/happy2.webp","Asset/Image/happy_ciba/happy3.webp","Asset/Image/happy_ciba/happy4.webp","Asset/Image/happy_ciba/happy5.webp","Asset/Image/happy_ciba/happy6.webp","Asset/Image/happy_ciba/happy7.webp","Asset/Image/happy_ciba/happy8.webp","Asset/Image/happy_ciba/happy9.webp"]
+    },
+    {
+        size:4,
+        a:["Asset/Image/sad_ciba2/2sad1.webp","Asset/Image/sad_ciba2/2sad2.webp","Asset/Image/sad_ciba2/2sad3.webp","Asset/Image/sad_ciba2/2sad4.webp","Asset/Image/sad_ciba2/2sad5.webp","Asset/Image/sad_ciba2/2sad6.webp","Asset/Image/sad_ciba2/2sad7.webp","Asset/Image/sad_ciba2/2sad8.webp","Asset/Image/sad_ciba2/2sad9.webp","Asset/Image/sad_ciba2/2sad10.webp","Asset/Image/sad_ciba2/2sad11.webp","Asset/Image/sad_ciba2/2sad12.webp","Asset/Image/sad_ciba2/2sad13.webp","Asset/Image/sad_ciba2/2sad14.webp","Asset/Image/sad_ciba2/2sad15.webp","Asset/Image/sad_ciba2/2sad16.webp"],
+        b:["Asset/Image/happy_ciba2/2happy1.webp","Asset/Image/happy_ciba2/2happy2.webp","Asset/Image/happy_ciba2/2happy3.webp","Asset/Image/happy_ciba2/2happy4.webp","Asset/Image/happy_ciba2/2happy5.webp","Asset/Image/happy_ciba2/2happy6.webp","Asset/Image/happy_ciba2/2happy7.webp","Asset/Image/happy_ciba2/2happy8.webp","Asset/Image/happy_ciba2/2happy9.webp","Asset/Image/happy_ciba2/2happy10.webp","Asset/Image/happy_ciba2/2happy11.webp","Asset/Image/happy_ciba2/2happy12.webp","Asset/Image/happy_ciba2/2happy13.webp","Asset/Image/happy_ciba2/2happy14.webp","Asset/Image/happy_ciba2/2happy15.webp","Asset/Image/happy_ciba2/2happy16.webp"]
+    }
+];
+
+const puzzle=document.getElementById("puzzle");
+const message=document.getElementById("message");
+const revealBtn=document.getElementById("revealBtn");
+const overlay=document.getElementById("overlay");
+const imgA=document.getElementById("imgA");
+const imgB=document.getElementById("imgB");
+const imgC=document.getElementById("imgC");
+const nextBtn=document.getElementById("nextBtn");
+const rewardTitle = document.getElementById("rewardTitle");
+const finalMessage = document.getElementById("finalMessage");
+
+let tiles=[];
+
+document.getElementById("startBtn").onclick = () => {
+    document.getElementById("startScreen").style.display = "none";
+    document.getElementById("game").style.display = "block";
+    loadLevel();
+};
+
+function loadLevel(){
+    message.style.display="none";
+    revealBtn.style.display="none";
+    puzzle.innerHTML="";
+    tiles=[];
+    playBGM(level);
+    let data=levels[level-1];
+    puzzle.style.gridTemplateColumns=`repeat(${data.size},1fr)`;
+    for(let i=0;i<data.size*data.size;i++){
+        let t=document.createElement("div");
+        t.className="tile";
+        t.style.backgroundImage=`url('${data.a[i]}')`;
+        t.dataset.correct=i; t.dataset.backImg=data.b[i];
+        t.draggable=false;
+        tiles.push(t);
+    }
+    safeShuffle(tiles);
+    tiles.forEach(t=>puzzle.appendChild(t));
+    attachDrag();
+}
+
+function attachDrag() {
+    let dragged = null;
+    tiles.forEach(tile => {
+        tile.onmousedown = (e) => { 
+            e.preventDefault(); 
+            dragged = tile; 
+            tile.style.opacity = "0.7"; 
+            pickupSound.play(); 
+        };
+        tile.addEventListener('touchstart', function(e) { 
+            e.preventDefault(); 
+            dragged = tile; 
+            pickupSound.play(); 
+            tile.style.opacity = "0.7"; 
+        }, { passive: false });
+
+        tile.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+        tile.addEventListener('touchend', function(e) {
+            tile.style.opacity = "1";
+            let touch = e.changedTouches[0];
+            let target = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (target && target.classList.contains('tile') && target !== dragged) handleDrop(dragged, target);
+            dragged = null;
+        });
+    });
+
+    window.onmouseup = (e) => {
+        if (!dragged) return;
+        dragged.style.opacity = "1";
+        let target = document.elementFromPoint(e.clientX, e.clientY);
+        if (target && target.classList.contains('tile') && target !== dragged) handleDrop(dragged, target);
+        dragged = null;
+    };
+}
+
+function handleDrop(dragged, target) {
+    if (!dragged || dragged === target) return;
+    let dn = dragged.nextSibling;
+    let tn = target.nextSibling;
+    if (dn === target) puzzle.insertBefore(target, dragged);
+    else { puzzle.insertBefore(dragged, tn); puzzle.insertBefore(target, dn); }
+    swapSound.play();
+    checkLock();
+    if ([...puzzle.children].every((t, i) => t.dataset.correct == i)) {
+        message.style.display = "inline-block";
+        revealTiles();
+        revealBtn.style.display = "inline-block";
+    }
+}
+
+function checkLock(){
+    [...puzzle.children].forEach((t,i)=>{
+        if(t.dataset.correct==i && !t.locked){ t.locked=true; correctSound.play(); happyReaction(); }
+    });
+}
+
+function revealTiles(){
+    [...puzzle.children].forEach((tile,i)=>{
+        setTimeout(()=>{
+            tile.style.opacity="0.3";
+            setTimeout(()=>{ tile.style.backgroundImage = `url('${tile.dataset.backImg}')`; tile.style.opacity="1"; },200);
+        }, i * 80);
+    });
+}
+
+revealBtn.onclick = () => {
+    overlay.style.display = "flex";
+    
+    // Reset visibility for the initial reward item
+    imgC.style.display = "none";
+    imgB.style.display = "block";
+    imgA.style.display = "block";
+    
+    imgA.src = rewardImages[level - 1];
+    imgB.src = ""; 
+    imgA.style.opacity = "1"; 
+    imgA.style.transition = "none";
+
+    if (level === 1) rewardTitle.innerText = "You received a piece of blank paper... wait, there is something on it. What could it be? If only the sun out here can be less bright...";
+    else rewardTitle.innerText = "You received a pair of Stock Image sunglasses \u{1F381}";
+};
+
+nextBtn.onclick = () => {
+    if (level === 1) { overlay.style.display = "none"; level = 2; loadLevel(); }
+    else if (level === 2) showStoryPage();
+};
+
+function showStoryPage() {
+    if (storyPage === 0) playBGM(3);
+    if (storyPage < storyContent.length) {
+        let page = storyContent[storyPage];
+        rewardTitle.innerText = page.text;
+        
+        // Default: hide reveal images, show story image C
+        imgA.style.display = "none";
+        imgB.style.display = "none";
+        imgC.style.display = "none";
+
+        if (storyPage === 2) {
+	    if (isMobile) {
+	        document.getElementById("storyFrame").style.height = "200px";
+	        imgA.style.height = "200px";
+ 	       imgB.style.height = "200px";
+	    }
+            // Final Reveal: show A and B
+            imgA.style.display = "block";
+            imgB.style.display = "block";
+            imgA.style.transition = "none"; 
+            imgA.style.opacity = "1";
+            imgA.src = page.start; 
+            imgB.src = page.end;
+
+            isReacting = true; clearTimeout(idleTimer);
+            character.src = "Asset/Image/happy.webp"; character.classList.add("jumping");
+            nextBtn.style.display = "none";
+            
+            setTimeout(() => { 
+                imgA.style.transition = "opacity 4s ease-in-out"; 
+                imgA.style.opacity = "0"; 
+            }, 600);
+            setTimeout(() => { finalMessage.classList.add("show-final"); }, 4600);
+        } else {
+            // Story pages: show C
+            imgC.style.display = "block";
+            imgC.src = page.img;
+        }
+        storyPage++;
+    }
+}
+
+function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ let j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } }
+function safeShuffle(arr){ do { shuffle(arr); } while (arr.some((t,i)=>t.dataset.correct==i)); }
+</script>
+
+</body>
+</html>
